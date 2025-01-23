@@ -17,6 +17,23 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+dependencies = [
+    # Example main dependency
+    # "requests>=2.25.0",
+]
+
+[project.optional-dependencies]
+# Test dependencies
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+]
+# Development dependencies
+dev = [
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+]
+
 [project.urls]
 "Homepage" = "https://github.com/vanuan/tree-to-script"
 "Bug Tracker" = "https://github.com/vanuan/tree-to-script/issues"
@@ -27,8 +44,5 @@ classifiers = [
 
 [tool.setuptools]
 package-dir = {"" = "."}
-license-files = ["LICENSE.txt"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+license-files = ["LICENSE"]
 
