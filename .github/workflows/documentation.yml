@@ -19,9 +19,9 @@ jobs:
           cd docs && sphinx-build -M singlehtml source/ build/
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: {% raw %}${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}{% endraw %}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
-          github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/build/singlehtml/
           force_orphan: true
