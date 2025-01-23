@@ -1,0 +1,76 @@
+name: Manual version bump and push tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Type of version bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version_tag: ${{ steps.bump.outputs.version_tag }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bump2version
+
+    - name: Bump version
+      id: bump
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        bump2version --current-version $(python -c "import tree_to_script; print(tree_to_script.__version__)") ${{ github.event.inputs.bump_type }} tree_to_script/__init__.py pyproject.toml --commit --tag --tag-message "Release {new_version}"
+        version=$(python -c "import tree_to_script; print(tree_to_script.__version__)")
+        echo "version_tag=v$(python -c 'import tree_to_script; print(tree_to_script.__version__)')" >> $GITHUB_OUTPUT
+
+    - name: Push changes
+      run: |
+        git push origin main --follow-tags
+
+  trigger-release:
+    needs: bump_version
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Trigger release workflow
+      uses: actions/github-script@v6
+      env:
+        BUMP_VERSION_TAG: ${{ needs.bump_version.outputs.version_tag }}
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'release.yml',
+            ref: process.env.GITHUB_REF_NAME,
+            inputs: {
+              version_tag: process.env.BUMP_VERSION_TAG
+            }
+          })
